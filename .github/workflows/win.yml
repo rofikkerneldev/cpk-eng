@@ -1,7 +1,6 @@
 name: CI Win64
 
 on:
-  push:
   workflow_dispatch:
 
 permissions:
