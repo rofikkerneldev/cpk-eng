@@ -119,235 +119,237 @@
       </div>
     </template>
 
-   <!-- ===== Config Tab ===== -->
-<template v-else-if="activeTab === 'config'">
-  <div class="config-tab-content">
-    <div v-if="configLoading" class="loading-wrapper">
-      <LoadingState text="Loading configuration information..." />
-    </div>
+    <!-- ===== Config Tab ===== -->
+    <template v-else-if="activeTab === 'config'">
+      <div class="config-tab-content">
+        <div v-if="configLoading" class="loading-wrapper">
+          <LoadingState text="Loading configuration information..." />
+        </div>
 
-    <div v-else-if="configList.length === 0" class="empty-wrapper">
-      <EmptyState title="No public configuration available for this product" description="View other digital products to get specification information" />
-    </div>
+        <div v-else-if="configList.length === 0" class="empty-wrapper">
+          <EmptyState title="No public configuration available for this product" description="View other digital products to get specification information" />
+        </div>
 
-    <template v-else>
-      <div class="config-toolbar">
-        <span class="config-toolbar-title">
-          <i class="fas fa-table-list"></i> Version Configurations ({{ configList.length }})
-        </span>
+        <template v-else>
+          <div class="config-toolbar">
+            <span class="config-toolbar-title">
+              <i class="fas fa-table-list"></i> Version Configurations（{{ configList.length }}）
+            </span>
+            <button
+              type="button"
+              class="compare-btn"
+              :disabled="compareSelected.length < 2"
+              @click="goCompare"
+            >
+              <i class="fas fa-code-compare"></i> Compare Configurations（{{ compareSelected.length }}）
+            </button>
+          </div>
+
+          <div class="config-list">
+            <div
+              v-for="config in configList"
+              :key="String(config.id)"
+              :class="['config-card', { active: selectedConfigId === String(config.id) }]"
+              @click="selectConfig(String(config.id))"
+            >
+              <div class="config-check">
+                <i :class="selectedConfigId === String(config.id) ? 'fas fa-circle-dot' : 'far fa-circle'"></i>
+              </div>
+              <div class="config-info">
+                <div class="config-title-row">
+                  <strong class="config-title">{{ config.title }}</strong>
+                  <span v-if="String(config.is_add_compare) === '1'" class="comparing-badge">Comparing</span>
+                </div>
+                <div class="config-meta">
+                  <span v-if="config.price">Reference Price ¥{{ config.price }}</span>
+                  <span v-if="config.release_time">Released {{ config.release_time }}</span>
+                  <span v-if="config.cpu">{{ config.cpu }}</span>
+                  <span v-if="config.ram">{{ config.ram }}</span>
+                </div>
+              </div>
+              <div class="config-actions" @click.stop>
+                <button
+                  type="button"
+                  :class="['compare-toggle', { active: compareSelected.includes(String(config.id)) }]"
+                  :disabled="comparePending"
+                  @click="toggleCompareSelected(String(config.id))"
+                >
+                  <i :class="compareSelected.includes(String(config.id)) ? 'fas fa-check-square' : 'far fa-square'"></i>
+                  {{ compareSelected.includes(String(config.id)) ? 'Selected for Comparison' : 'Add to Comparison' }}
+                </button>
+                <button
+                  type="button"
+                  :class="['server-compare-toggle', { active: String(config.is_add_compare) === '1' }]"
+                  :disabled="serverComparePending"
+                  @click="toggleServerCompare(String(config.id))"
+                >
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  {{ String(config.is_add_compare) === '1' ? 'Remove from Comparison' : 'Add to Comparison' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="selectedConfig" class="config-detail">
+            <div class="config-detail-head">
+              <span class="config-detail-title"><i class="fas fa-microchip"></i> {{ selectedConfig.title }} Detailed Specifications</span>
+            </div>
+            <ProductConfigTable :config="selectedConfig" />
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- ===== Media Tab ===== -->
+    <template v-else-if="activeTab === 'media'">
+      <div class="media-sub-tabs">
         <button
+          v-for="filter in mediaFilters"
+          :key="filter.key"
           type="button"
-          class="compare-btn"
-          :disabled="compareSelected.length < 2"
-          @click="goCompare"
+          :class="['media-filter-btn', { active: activeMediaFilter === filter.key }]"
+          @click="selectMediaFilter(filter.key)"
         >
-          <i class="fas fa-code-compare"></i> Compare Configurations ({{ compareSelected.length }})
+          {{ filter.label }}
         </button>
       </div>
 
-      <div class="config-list">
-        <div
-          v-for="config in configList"
-          :key="String(config.id)"
-          :class="['config-card', { active: selectedConfigId === String(config.id) }]"
-          @click="selectConfig(String(config.id))"
-        >
-          <div class="config-check">
-            <i :class="selectedConfigId === String(config.id) ? 'fas fa-circle-dot' : 'far fa-circle'"></i>
-          </div>
-          <div class="config-info">
-            <div class="config-title-row">
-              <strong class="config-title">{{ config.title }}</strong>
-              <span v-if="String(config.is_add_compare) === '1'" class="comparing-badge">Comparing</span>
-            </div>
-            <div class="config-meta">
-              <span v-if="config.price">Reference Price ¥{{ config.price }}</span>
-              <span v-if="config.release_time">Released {{ config.release_time }}</span>
-              <span v-if="config.cpu">{{ config.cpu }}</span>
-              <span v-if="config.ram">{{ config.ram }}</span>
-            </div>
-          </div>
-          <div class="config-actions" @click.stop>
-            <button
-              type="button"
-              :class="['compare-toggle', { active: compareSelected.includes(String(config.id)) }]"
-              :disabled="comparePending"
-              @click="toggleCompareSelected(String(config.id))"
-            >
-              <i :class="compareSelected.includes(String(config.id)) ? 'fas fa-check-square' : 'far fa-square'"></i>
-              {{ compareSelected.includes(String(config.id)) ? 'Selected for Comparison' : 'Add to Comparison' }}
-            </button>
-            <button
-              type="button"
-              :class="['server-compare-toggle', { active: String(config.is_add_compare) === '1' }]"
-              :disabled="serverComparePending"
-              @click="toggleServerCompare(String(config.id))"
-            >
-              <i class="fas fa-cloud-upload-alt"></i>
-              {{ String(config.is_add_compare) === '1' ? 'Remove from Comparison' : 'Add to Comparison' }}
-            </button>
-          </div>
-        </div>
+      <div v-if="mediaLoading && mediaList.length === 0" class="loading-wrapper">
+        <LoadingState text="Loading product gallery..." />
       </div>
 
-      <div v-if="selectedConfig" class="config-detail">
-        <div class="config-detail-head">
-          <span class="config-detail-title"><i class="fas fa-microchip"></i> {{ selectedConfig.title }} Detailed Specifications</span>
+      <div v-else-if="mediaError && mediaList.length === 0" class="error-wrapper">
+        <ErrorState title="Failed to Load Gallery" message="Unable to retrieve images/videos for this product. Check your network connection and try again" @retry="fetchMedia" />
+      </div>
+
+      <div v-else-if="mediaList.length === 0" class="empty-wrapper">
+        <EmptyState title="No Media Content" description="There are no images or videos to display under this filter" />
+      </div>
+
+      <div v-else class="media-grid">
+        <div
+          v-for="(item, index) in mediaList"
+          :key="String(item.id ?? item.entityId ?? index)"
+          class="media-item"
+          @click="openMedia(index)"
+        >
+          <AppImage :src="mediaThumb(item)" image-class="media-img" :alt="mediaTypeText(item)" loading="lazy" />
+          <span v-if="isVideo(item)" class="media-play-badge"><i class="fas fa-play"></i></span>
+          <span class="media-type-badge">{{ isVideo(item) ? 'Video' : 'Image' }}</span>
         </div>
-        <ProductConfigTable :config="selectedConfig" />
+
+        <div class="pagination-footer">
+          <LoadingState v-if="mediaLoading" text="Loading more..." />
+          <button v-else-if="mediaError" class="retry-inline" @click="fetchMedia(true)">Failed to load, click to retry</button>
+          <div v-else-if="mediaNoMore" class="no-more">No more content</div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ===== Rating Tab ===== -->
+    <template v-else-if="activeTab === 'rating'">
+      <div class="rating-tab-content">
+        <!-- My Rating -->
+        <div class="my-rating-card">
+          <div class="my-rating-head">
+            <span class="section-title"><i class="fas fa-star"></i> My Rating</span>
+            <span v-if="!authStore.isLoggedIn" class="login-hint">Log in to rate</span>
+          </div>
+
+          <div v-if="authStore.isLoggedIn" class="rating-composer">
+            <div class="star-input">
+              <button
+                v-for="star in 5"
+                :key="star"
+                type="button"
+                class="star-btn"
+                :class="{ active: star <= myRating }"
+                @click="setMyRating(star)"
+                :title="`${star} Stars`"
+              >
+                <i :class="star <= myRating ? 'fas fa-star' : 'far fa-star'"></i>
+              </button>
+              <span class="rating-hint-text">
+                {{ myRating > 0 ? `Rated ${myRating} Stars` : 'Click a star to rate' }}
+              </span>
+            </div>
+            <div class="rating-options">
+              <label class="buy-option">
+                <input v-model="buyChecked" type="checkbox" />
+                <span>I purchased this product</span>
+              </label>
+              <button
+                v-if="myRating > 0"
+                type="button"
+                class="cancel-rating-btn"
+                :disabled="ratingPending"
+                @click="clearMyRating"
+              >
+                Cancel Rating
+              </button>
+            </div>
+            <div v-if="ratingPending" class="rating-pending"><LoadingState text="Submitting rating..." /></div>
+          </div>
+
+          <div v-else class="rating-login-tip">
+            <span>Log in to your CoolApk account to rate</span>
+            <button type="button" class="login-btn" @click="authStore.openLoginModal()">Log In Now</button>
+          </div>
+        </div>
+
+        <!-- Rating Trend Chart -->
+        <div class="rating-chart-wrapper">
+          <div v-if="chartLoading" class="loading-wrapper">
+            <LoadingState text="Loading rating trends..." />
+          </div>
+          <div v-else-if="chartError" class="error-wrapper">
+            <ErrorState title="Failed to Load Rating Trends" message="Unable to retrieve this product's rating trend data" @retry="fetchRatingChart" />
+          </div>
+          <RatingChart v-else :periods="ratingChartPeriods" />
+        </div>
+
+        <!-- User Ratings List -->
+        <div class="rating-list-section">
+          <div class="rating-list-head">
+            <span class="section-title"><i class="fas fa-users"></i> User Ratings</span>
+            <div class="rating-list-filter">
+              <button
+                v-for="filter in ratingListFilters"
+                :key="filter.key"
+                type="button"
+                :class="['filter-pill', { active: activeRatingFilter === filter.key }]"
+                @click="selectRatingFilter(filter.key)"
+              >
+                {{ filter.label }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="ratingsLoading && ratings.length === 0" class="loading-wrapper">
+            <LoadingState text="Loading rating list..." />
+          </div>
+
+          <div v-else-if="ratingsError && ratings.length === 0" class="error-wrapper">
+            <ErrorState title="Failed to Load Rating List" message="Unable to retrieve user ratings for this product" @retry="fetchRatings" />
+          </div>
+
+          <div v-else-if="ratings.length === 0" class="empty-wrapper">
+            <EmptyState title="No Ratings" description="No users have rated this product yet" />
+          </div>
+
+          <div v-else class="rating-list">
+            <RatingCard v-for="item in ratings" :key="item.id || item.entityId || item.uid" :feed="item" />
+
+            <div class="pagination-footer">
+              <LoadingState v-if="ratingsLoading" text="Loading more..." />
+              <button v-else-if="ratingsError" class="retry-inline" @click="fetchRatings(true)">Failed to load, click to retry</button>
+              <div v-else-if="ratingsNoMore" class="no-more">No more ratings</div>
+            </div>
+          </div>
+        </div>
       </div>
     </template>
   </div>
-</template>
-
-   <!-- ===== Media Tab ===== -->
-<template v-else-if="activeTab === 'media'">
-  <div class="media-sub-tabs">
-    <button
-      v-for="filter in mediaFilters"
-      :key="filter.key"
-      type="button"
-      :class="['media-filter-btn', { active: activeMediaFilter === filter.key }]"
-      @click="selectMediaFilter(filter.key)"
-    >
-      {{ filter.label }}
-    </button>
-  </div>
-
-  <div v-if="mediaLoading && mediaList.length === 0" class="loading-wrapper">
-    <LoadingState text="Loading product gallery..." />
-  </div>
-
-  <div v-else-if="mediaError && mediaList.length === 0" class="error-wrapper">
-    <ErrorState title="Failed to Load Gallery" message="Unable to retrieve images/videos for this product. Check your network connection and try again" @retry="fetchMedia" />
-  </div>
-
-  <div v-else-if="mediaList.length === 0" class="empty-wrapper">
-    <EmptyState title="No Media Content" description="There are no images or videos to display under this filter" />
-  </div>
-
-  <div v-else class="media-grid">
-    <div
-      v-for="(item, index) in mediaList"
-      :key="String(item.id ?? item.entityId ?? index)"
-      class="media-item"
-      @click="openMedia(index)"
-    >
-      <AppImage :src="mediaThumb(item)" image-class="media-img" :alt="mediaTypeText(item)" loading="lazy" />
-      <span v-if="isVideo(item)" class="media-play-badge"><i class="fas fa-play"></i></span>
-      <span class="media-type-badge">{{ isVideo(item) ? 'Video' : 'Image' }}</span>
-    </div>
-
-    <div class="pagination-footer">
-      <LoadingState v-if="mediaLoading" text="Loading more..." />
-      <button v-else-if="mediaError" class="retry-inline" @click="fetchMedia(true)">Failed to load, click to retry</button>
-      <div v-else-if="mediaNoMore" class="no-more">No more content</div>
-    </div>
-  </div>
-</template>
-
-   <!-- ===== Rating Tab ===== -->
-<template v-else-if="activeTab === 'rating'">
-  <div class="rating-tab-content">
-    <!-- My Rating -->
-    <div class="my-rating-card">
-      <div class="my-rating-head">
-        <span class="section-title"><i class="fas fa-star"></i> My Rating</span>
-        <span v-if="!authStore.isLoggedIn" class="login-hint">Log in to rate</span>
-      </div>
-
-      <div v-if="authStore.isLoggedIn" class="rating-composer">
-        <div class="star-input">
-          <button
-            v-for="star in 5"
-            :key="star"
-            type="button"
-            class="star-btn"
-            :class="{ active: star <= myRating }"
-            @click="setMyRating(star)"
-            :title="`${star} Stars`"
-          >
-            <i :class="star <= myRating ? 'fas fa-star' : 'far fa-star'"></i>
-          </button>
-          <span class="rating-hint-text">
-            {{ myRating > 0 ? `Rated ${myRating} Stars` : 'Click a star to rate' }}
-          </span>
-        </div>
-        <div class="rating-options">
-          <label class="buy-option">
-            <input v-model="buyChecked" type="checkbox" />
-            <span>I purchased this product</span>
-          </label>
-          <button
-            v-if="myRating > 0"
-            type="button"
-            class="cancel-rating-btn"
-            :disabled="ratingPending"
-            @click="clearMyRating"
-          >
-            Cancel Rating
-          </button>
-        </div>
-        <div v-if="ratingPending" class="rating-pending"><LoadingState text="Submitting rating..." /></div>
-      </div>
-
-      <div v-else class="rating-login-tip">
-        <span>Log in to your CoolApk account to rate</span>
-        <button type="button" class="login-btn" @click="authStore.openLoginModal()">Log In Now</button>
-      </div>
-    </div>
-
-    <!-- Rating Trend Chart -->
-    <div class="rating-chart-wrapper">
-      <div v-if="chartLoading" class="loading-wrapper">
-        <LoadingState text="Loading rating trends..." />
-      </div>
-      <div v-else-if="chartError" class="error-wrapper">
-        <ErrorState title="Failed to Load Rating Trends" message="Unable to retrieve this product's rating trend data" @retry="fetchRatingChart" />
-      </div>
-      <RatingChart v-else :periods="ratingChartPeriods" />
-    </div>
-
-    <!-- User Ratings List -->
-    <div class="rating-list-section">
-      <div class="rating-list-head">
-        <span class="section-title"><i class="fas fa-users"></i> User Ratings</span>
-        <div class="rating-list-filter">
-          <button
-            v-for="filter in ratingListFilters"
-            :key="filter.key"
-            type="button"
-            :class="['filter-pill', { active: activeRatingFilter === filter.key }]"
-            @click="selectRatingFilter(filter.key)"
-          >
-            {{ filter.label }}
-          </button>
-        </div>
-      </div>
-
-      <div v-if="ratingsLoading && ratings.length === 0" class="loading-wrapper">
-        <LoadingState text="Loading rating list..." />
-      </div>
-
-      <div v-else-if="ratingsError && ratings.length === 0" class="error-wrapper">
-        <ErrorState title="Failed to Load Rating List" message="Unable to retrieve user ratings for this product" @retry="fetchRatings" />
-      </div>
-
-      <div v-else-if="ratings.length === 0" class="empty-wrapper">
-        <EmptyState title="No Ratings" description="No users have rated this product yet" />
-      </div>
-
-      <div v-else class="rating-list">
-        <RatingCard v-for="item in ratings" :key="item.id || item.entityId || item.uid" :feed="item" />
-
-        <div class="pagination-footer">
-          <LoadingState v-if="ratingsLoading" text="Loading more..." />
-          <button v-else-if="ratingsError" class="retry-inline" @click="fetchRatings(true)">Failed to load, click to retry</button>
-          <div v-else-if="ratingsNoMore" class="no-more">No more ratings</div>
-         </div>
-  </div>
-</div>
-</template>
 </template>
 
 <script setup lang="ts">
