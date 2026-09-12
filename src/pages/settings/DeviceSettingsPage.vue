@@ -1,33 +1,33 @@
 <template>
   <div class="settings-section">
-    <h3 class="section-title">设备信息</h3>
+    <h3 class="section-title">Device Information</h3>
 
     <div class="setting-group">
-      <h4 class="group-title">当前状态</h4>
+      <h4 class="group-title">Current Status</h4>
       <div class="status-box">
         <div class="status-row">
-          <span class="status-key">登录状态</span>
+          <span class="status-key">Login Status</span>
           <span :class="['status-value', deviceInfo?.loggedIn ? 'status-on' : 'status-off']">
-            {{ deviceInfo?.loggedIn ? '已登录（设备码固定）' : '未登录（设备码随机）' }}
+            {{ deviceInfo?.loggedIn ? 'Logged in (fixed device code)' : 'Not logged in (random device code)' }}
           </span>
         </div>
         <div class="status-row">
-          <span class="status-key">设备码（X-App-Device）</span>
-          <code class="status-code" :title="deviceInfo?.deviceCode">{{ deviceInfo?.deviceCode || '加载中...' }}</code>
+          <span class="status-key">Device Code (X-App-Device)</span>
+          <code class="status-code" :title="deviceInfo?.deviceCode">{{ deviceInfo?.deviceCode || 'Loading...' }}</code>
         </div>
         <p class="tray-tip">
           <i class="fas fa-info-circle"></i>
-          未登录时设备码为随机生成（每台电脑首次生成后固定）；登录后使用账号绑定的固定设备码（默认与 SDK 官方一致，可被写操作校验通过），请勿手动修改。
+          When not logged in, the device code is randomly generated (fixed after the first generation on each computer); after logging in, the fixed device code bound to the account is used (by default consistent with the official SDK and can pass write-operation validation). Do not modify it manually.
         </p>
       </div>
     </div>
 
     <div class="setting-group">
-      <h4 class="group-title">自定义设备指纹</h4>
+      <h4 class="group-title">Custom Device Fingerprint</h4>
       <div class="setting-row">
         <div class="row-info">
-          <span class="row-label">启用自定义设备信息</span>
-          <span class="row-sub">自定义请求头中的机型、版本与系统信息（关闭后使用客户端默认值）</span>
+          <span class="row-label">Enable Custom Device Information</span>
+          <span class="row-sub">Customize the device model, version, and system information in request headers (when disabled, the client default values are used)</span>
         </div>
         <AppSwitch v-model="settingsStore.settings.deviceFingerprint.customFingerprint" />
       </div>
@@ -35,14 +35,14 @@
 
     <template v-if="settingsStore.settings.deviceFingerprint.customFingerprint">
       <div class="setting-group">
-        <h4 class="group-title">机型模板</h4>
+        <h4 class="group-title">Device Model Template</h4>
         <div class="setting-row">
           <div class="row-info">
-            <span class="row-label">预设机型</span>
-            <span class="row-sub">一键套用常见机型模板，或选择"自定义"手动输入</span>
+            <span class="row-label">Preset Model</span>
+            <span class="row-sub">Quickly apply a common device model template, or select "Custom" to enter it manually</span>
           </div>
           <select v-model="presetModel" class="text-input select-input">
-            <option value="">自定义机型</option>
+            <option value="">Custom Model</option>
             <option v-for="p in DEVICE_PRESETS" :key="p.model" :value="p.model">
               {{ p.label }}（{{ p.model }}）
             </option>
@@ -51,22 +51,22 @@
 
         <div class="setting-row">
           <div class="row-info">
-            <span class="row-label">机型型号</span>
-            <span class="row-sub">内嵌于 User-Agent，如 23113RKC6C（小米 14）</span>
+            <span class="row-label">Device Model</span>
+            <span class="row-sub">Embedded in the User-Agent, e.g. 23113RKC6C (Xiaomi 14)</span>
           </div>
           <input
             v-model="settingsStore.settings.deviceFingerprint.model"
             type="text"
             class="text-input"
-            placeholder="如：23113RKC6C"
+            placeholder="e.g. 23113RKC6C"
             maxlength="40"
           />
         </div>
 
         <div class="field-row">
           <div class="row-info">
-            <span class="row-label">Android 版本</span>
-            <span class="row-sub">UA 中的 Android 版本号</span>
+            <span class="row-label">Android Version</span>
+            <span class="row-sub">Android version number in the UA</span>
           </div>
           <input
             v-model="settingsStore.settings.deviceFingerprint.androidVersion"
@@ -76,8 +76,8 @@
             maxlength="8"
           />
           <div class="row-info">
-            <span class="row-label">Build 号</span>
-            <span class="row-sub">UA 中的 Build 版本</span>
+            <span class="row-label">Build Number</span>
+            <span class="row-sub">Build version in the UA</span>
           </div>
           <input
             v-model="settingsStore.settings.deviceFingerprint.build"
@@ -90,11 +90,11 @@
       </div>
 
       <div class="setting-group">
-        <h4 class="group-title">应用与系统信息</h4>
+        <h4 class="group-title">Application & System Information</h4>
         <div class="field-row">
           <div class="row-info">
-            <span class="row-label">App 版本（X-App-Version）</span>
-            <span class="row-sub">不得低于酷安官方最低支持版本</span>
+            <span class="row-label">App Version (X-App-Version)</span>
+            <span class="row-sub">Must not be lower than the minimum version officially supported by CoolApk</span>
           </div>
           <input
             v-model="settingsStore.settings.deviceFingerprint.appVersion"
@@ -104,8 +104,8 @@
             maxlength="20"
           />
           <div class="row-info">
-            <span class="row-label">版本号（X-App-Code）</span>
-            <span class="row-sub">同步作用于 X-App-Supported</span>
+            <span class="row-label">Version Code (X-App-Code)</span>
+            <span class="row-sub">Also applied to X-App-Supported</span>
           </div>
           <input
             v-model="settingsStore.settings.deviceFingerprint.appCode"
@@ -118,8 +118,8 @@
 
         <div class="field-row">
           <div class="row-info">
-            <span class="row-label">SDK Int（X-Sdk-Int）</span>
-            <span class="row-sub">Android SDK 版本号</span>
+            <span class="row-label">SDK Int (X-Sdk-Int)</span>
+            <span class="row-sub">Android SDK version number</span>
           </div>
           <input
             v-model="settingsStore.settings.deviceFingerprint.sdkInt"
@@ -129,8 +129,8 @@
             maxlength="4"
           />
           <div class="row-info">
-            <span class="row-label">语言（X-Sdk-Locale）</span>
-            <span class="row-sub">如 zh-CN / en-US</span>
+            <span class="row-label">Language (X-Sdk-Locale)</span>
+            <span class="row-sub">e.g. zh-CN / en-US</span>
           </div>
           <input
             v-model="settingsStore.settings.deviceFingerprint.locale"
@@ -143,8 +143,8 @@
 
         <div class="setting-row">
           <div class="row-info">
-            <span class="row-label">暗色模式（X-Dark-Mode）</span>
-            <span class="row-sub">模拟客户端深浅色状态，与界面主题相互独立</span>
+            <span class="row-label">Dark Mode (X-Dark-Mode)</span>
+            <span class="row-sub">Simulates the client's light/dark mode state independently of the interface theme</span>
           </div>
           <AppSwitch
             :model-value="settingsStore.settings.deviceFingerprint.darkMode === '1'"
@@ -154,7 +154,7 @@
       </div>
 
       <div class="setting-group">
-        <h4 class="group-title">预览</h4>
+        <h4 class="group-title">Preview</h4>
         <div class="preview-box">
           <div class="preview-row">
             <span class="preview-key">User-Agent</span>
@@ -184,20 +184,20 @@
       <div class="setting-group">
         <button class="reset-button" @click="resetToDefault">
           <i class="fas fa-undo"></i>
-          恢复默认设置
+          Restore Default Settings
         </button>
       </div>
     </template>
 
     <div class="setting-group">
-      <h4 class="group-title">注意事项</h4>
+      <h4 class="group-title">Important Notes</h4>
       <p class="tray-tip">
         <i class="fas fa-info-circle"></i>
-        设备码（X-App-Device）与请求令牌（X-App-Token）绑定账号，不支持自定义。修改机型、版本等字段后，若酷安返回"网络环境异常"或"请升级客户端"，说明该组合被服务端拒绝，请恢复默认或改用其他机型模板。
+        The device code (X-App-Device) and request token (X-App-Token) are bound to the account and cannot be customized. After modifying the device model, version, or other fields, if CoolApk returns "Abnormal network environment" or "Please upgrade the client", it means the combination was rejected by the server. Restore the defaults or switch to another device model template.
       </p>
       <p class="tray-tip">
         <i class="fas fa-info-circle"></i>
-        修改立即生效，无需重启客户端，作用于所有请求（含发布动态、评论、点赞等）。
+        Changes take effect immediately without restarting the client and apply to all requests (including posting feeds, comments, likes, etc.).
       </p>
     </div>
   </div>
