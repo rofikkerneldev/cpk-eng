@@ -2,7 +2,7 @@
   <div class="settings-page-container">
     <div class="settings-layout-card">
       <aside class="settings-sidebar">
-        <h2 class="settings-title">设置中心</h2>
+        <h2 class="settings-title">Settings Center</h2>
         <nav class="settings-menu">
           <router-link
             v-for="item in settingsMenu"
