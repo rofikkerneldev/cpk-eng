@@ -17,11 +17,11 @@
     </div>
 
     <div v-else-if="error && feeds.length === 0" class="state-wrapper">
-      <ErrorState title="加载失败" :message="error" @retry="loadFeeds(true)" />
+      <ErrorState title="Loading Failed" :message="error" @retry="loadFeeds(true)" />
     </div>
 
     <div v-else-if="feeds.length === 0" class="state-wrapper">
-      <EmptyState title="暂无内容" />
+      <EmptyState title="No Content" />
     </div>
 
     <div v-else class="feed-list">
@@ -33,7 +33,7 @@
       />
 
       <div v-if="loadingMore" class="loading-more">
-        <LoadingState text="加载更多..." />
+        <LoadingState text="Load More..." />
       </div>
     </div>
   </div>
