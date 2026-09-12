@@ -14,7 +14,7 @@
 
     <div class="center-panel">
       <EventsPage v-if="activeTab === 'events'" />
-      <NodePage v-else-if="activeTab === 'nodes'" node-type="topic" node-id="数码" title="数码版块" />
+      <NodePage v-else-if="activeTab === 'nodes'" node-type="topic" node-id="Digital" title="Digital Section" />
       <AnyListPage v-else-if="activeTab === 'anylist'" />
       <MyDyhPage v-else-if="activeTab === 'dyh'" />
     </div>
