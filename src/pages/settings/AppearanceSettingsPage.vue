@@ -1,16 +1,16 @@
 <template>
   <div class="settings-section">
-    <h3 class="section-title">外观设置</h3>
+    <h3 class="section-title">Appearance Settings</h3>
 
     <div class="setting-group">
-      <h4 class="group-title">主题模式</h4>
+      <h4 class="group-title">Theme Mode</h4>
       <div class="theme-options">
         <div
           :class="['theme-card', { 'is-active': settingsStore.settings.theme === 'light' }]"
           @click="settingsStore.setTheme('light')"
         >
           <div class="preview-box light-preview"></div>
-          <span>浅色模式</span>
+          <span>Light Mode</span>
         </div>
 
         <div
@@ -18,7 +18,7 @@
           @click="settingsStore.setTheme('dark')"
         >
           <div class="preview-box dark-preview"></div>
-          <span>深色模式</span>
+          <span>Dark Mode</span>
         </div>
 
         <div
@@ -26,14 +26,14 @@
           @click="settingsStore.setTheme('system')"
         >
           <div class="preview-box system-preview"></div>
-          <span>跟随系统</span>
+          <span>Follow System</span>
         </div>
       </div>
     </div>
 
     <div class="setting-group">
-      <h4 class="group-title">主题强调色</h4>
-      <p class="group-sub">全局品牌主色调，侧边栏、按钮与链接等统一换色</p>
+      <h4 class="group-title">Theme Accent Color</h4>
+      <p class="group-sub">Global brand color applied consistently to the sidebar, buttons, links, and other elements</p>
       <div class="accent-options">
         <div
           v-for="c in accentColors"
@@ -49,12 +49,12 @@
     </div>
 
     <div class="setting-group">
-      <h4 class="group-title">页面缩放与字号</h4>
+      <h4 class="group-title">Page Zoom & Font Size</h4>
       <div class="setting-row">
         <div class="row-info">
-          <span class="row-label">界面缩放比例 ({{ formatShortcut('Ctrl + / -') }})</span>
+          <span class="row-label">Interface Zoom ({{ formatShortcut('Ctrl + / -') }})</span>
           <span class="row-sub">
-            {{ settingsStore.settings.zoomManuallySet ? `手动缩放 ${settingsStore.settings.zoom}%` : '默认 100%：系统显示缩放已自动适配，无需额外放大' }}
+            {{ settingsStore.settings.zoomManuallySet ? `Manual zoom ${settingsStore.settings.zoom}%` : 'Default 100%: system display scaling is automatically adapted, no additional zoom is required' }}
           </span>
         </div>
         <div class="zoom-controls">
@@ -66,8 +66,8 @@
 
       <div class="setting-row">
         <div class="row-info">
-          <span class="row-label">正文字号</span>
-          <span class="row-sub">动态正文与标题的显示字号</span>
+          <span class="row-label">Body Font Size</span>
+          <span class="row-sub">Display size for feed content and titles</span>
         </div>
         <div class="zoom-controls">
           <button class="zoom-btn" @click="adjustFontSize(-1)">-</button>
@@ -78,8 +78,8 @@
     </div>
 
     <div class="setting-group">
-      <h4 class="group-title">列表密度</h4>
-      <p class="group-sub">信息流卡片的留白与间距紧凑程度</p>
+      <h4 class="group-title">List Density</h4>
+      <p class="group-sub">The amount of whitespace and spacing between feed cards</p>
       <div class="density-options">
         <div
           v-for="d in densityOptions"
@@ -94,20 +94,20 @@
     </div>
 
     <div class="setting-group">
-      <h4 class="group-title">微动画与视觉效果</h4>
+      <h4 class="group-title">Micro Animations & Visual Effects</h4>
       <div class="setting-row">
         <div class="row-info">
-          <span class="row-label">减少动态过渡效果</span>
-          <span class="row-sub">禁用界面显隐动画与微交互</span>
+          <span class="row-label">Reduce Motion Effects</span>
+          <span class="row-sub">Disable interface visibility animations and micro-interactions</span>
         </div>
         <AppSwitch v-model="settingsStore.settings.reduceMotion" />
       </div>
     </div>
 
-    <!-- 页面栏目显隐设置区域 -->
+    <!-- Page section visibility settings -->
     <div class="setting-group">
-      <h4 class="group-title">侧边栏页面栏目显隐设置</h4>
-      <p class="group-sub">根据个人使用习惯自由开启或关闭左侧侧边栏对应的功能栏目</p>
+      <h4 class="group-title">Sidebar Page Section Visibility</h4>
+      <p class="group-sub">Freely enable or disable the corresponding functional sections in the left sidebar according to your personal usage habits</p>
 
       <div class="nav-grid">
         <div v-for="nav in navItems" :key="nav.key" class="nav-toggle-card">
@@ -125,8 +125,8 @@
       <div class="nav-more-settings">
         <div class="setting-row nav-more-master-row">
           <div class="row-info">
-            <span class="row-label"><i class="fas fa-user nav-item-icon"></i> 个人中心「我的」</span>
-            <span class="row-sub">控制侧栏「我的」入口及其工作台数据子项</span>
+            <span class="row-label"><i class="fas fa-user nav-item-icon"></i> Personal Center "My"</span>
+            <span class="row-sub">Control the sidebar "My" entry and its workspace data sub-items</span>
           </div>
           <AppSwitch
             :model-value="getNavVisible('my')"
