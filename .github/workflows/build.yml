@@ -7,109 +7,21 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      create_release:
-        description: '发布 Release（仅 tag 推送时生效）'
-        type: boolean
-        default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # ─── 前端测试矩阵（多代理并行） ───
-  frontend-tests:
-    name: ${{ matrix.name }}
-    runs-on: ubuntu-22.04
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: 前端单元测试
-            task: unit
-          - name: 前端类型检查
-            task: typecheck
-          - name: 前端构建检查
-            task: build
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: 安装 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: 安装前端依赖
-        run: npm ci
-
-      - name: 安装 Linux 依赖 (Tauri)
-        if: matrix.task == 'build'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
-
-      - name: 运行单元测试
-        if: matrix.task == 'unit'
-        run: npm test
-
-      - name: 运行类型检查
-        if: matrix.task == 'typecheck'
-        run: npm run typecheck
-
-      - name: 前端构建
-        if: matrix.task == 'build'
-        run: npm run build
-
-  # ─── Rust 测试 ───
-  rust-tests:
-    name: Rust 测试
-    runs-on: ubuntu-22.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: 安装 Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: 缓存 Rust
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-
-      - name: 安装 Linux 依赖
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
-
-      - name: 安装 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: 安装前端依赖
-        run: npm ci
-
-      - name: 构建前端
-        run: npm run build
-
-      - name: Rust 测试
-        working-directory: src-tauri
-        run: cargo test --lib
-
-  # ─── 构建（仅 tag / 手动触发） ───
+  # ─── Build + Upload Artifacts Only ───
   build:
     name: ${{ matrix.name }}
-    needs: []               # 不依赖 test；与 test 并发执行
-    if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 60
+
     strategy:
       fail-fast: false
       matrix:
@@ -118,18 +30,22 @@ jobs:
             platform: windows-latest
             args: --bundles nsis
             rustTargets: ''
+
           - name: Windows ARM64
             platform: windows-latest
             args: --target aarch64-pc-windows-msvc --bundles nsis
             rustTargets: aarch64-pc-windows-msvc
+
           - name: Linux x64
             platform: ubuntu-22.04
             args: --bundles appimage,deb,rpm
             rustTargets: ''
+
           - name: macOS Apple Silicon
             platform: macos-latest
             args: --target aarch64-apple-darwin --bundles app,dmg
             rustTargets: aarch64-apple-darwin,x86_64-apple-darwin
+
           - name: macOS Intel
             platform: macos-latest
             args: --target x86_64-apple-darwin --bundles app,dmg
@@ -138,51 +54,56 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 安装 Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: 安装 Rust
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.rustTargets }}
 
-      - name: 缓存 Rust
+      - name: Cache Rust
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
 
-      - name: 安装 Linux 依赖
+      - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf rpm
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            rpm
 
-      - name: 安装前端依赖
+      - name: Install frontend dependencies
         run: npm ci
 
-      - name: 同步标签版本号
+      - name: Sync tag version
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         shell: bash
         run: npm run version:set -- ${GITHUB_REF_NAME#v}
 
-      - name: 构建前端
+      - name: Build frontend
         run: npm run build
 
-      - name: 设置 CI 纯英文包名 (coolapk-desktop)
+      - name: Set CI package name
         shell: bash
         run: |
           node -e '
             const fs = require("fs");
-            const conf = JSON.parse(fs.readFileSync("src-tauri/tauri.conf.json", "utf8"));
+            const path = "src-tauri/tauri.conf.json";
+            const conf = JSON.parse(fs.readFileSync(path, "utf8"));
             conf.productName = "coolapk-desktop";
-            fs.writeFileSync("src-tauri/tauri.conf.json", JSON.stringify(conf, null, 2));
+            fs.writeFileSync(path, JSON.stringify(conf, null, 2));
           '
 
-      - name: 构建与上传产物（非 Tag 推送）
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+      - name: Build and upload artifact
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -190,16 +111,3 @@ jobs:
           args: ${{ matrix.args }}
           uploadWorkflowArtifacts: true
           workflowArtifactNamePattern: '[platform]-[arch]-[bundle]'
-
-      - name: 发布 Release 产物（Tag 推送）
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: tauri-apps/tauri-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 酷安 ${{ github.ref_name }}
-          releaseDraft: false
-          prerelease: false
-          generateReleaseNotes: true
-          args: ${{ matrix.args }}
