@@ -7,10 +7,10 @@
             <div class="search-input-wrapper">
               <i class="fas fa-search search-input-icon"></i>
               <input v-model="searchQuery" type="text" class="search-field" :placeholder="searchPlaceholder" @keydown.enter="doSearch(searchQuery)" @focus="onInputFocus" />
-              <button v-if="searchQuery" type="button" class="clear-btn" aria-label="清空搜索" @click="clearSearch"><i class="fas fa-times"></i></button>
+              <button v-if="searchQuery" type="button" class="clear-btn" aria-label="Clear search" @click="clearSearch"><i class="fas fa-times"></i></button>
             </div>
             <div v-if="showHistory && !searchQuery.trim() && searchHistory.length" class="search-history-dropdown">
-              <div class="search-history-header"><span>最近搜索</span><button type="button" @mousedown.prevent="clearHistory">清空</button></div>
+              <div class="search-history-header"><span>Recent searches</span><button type="button" @mousedown.prevent="clearHistory">Clear</button></div>
               <button v-for="item in searchHistory" :key="item" type="button" class="search-history-item" @mousedown.prevent="selectHistory(item)">
                 <i class="far fa-clock"></i><span>{{ item }}</span><i class="fas fa-times remove-history" @mousedown.stop.prevent="removeHistory(item)"></i>
               </button>
@@ -29,7 +29,7 @@
           </button>
         </div>
 
-        <div v-if="queryStr && !isTopicScopedSearch && isAskTab" class="search-ask-filter" role="tablist" aria-label="问答类型">
+        <div v-if="queryStr && !isTopicScopedSearch && isAskTab" class="search-ask-filter" role="tablist" aria-label="Q&A type">
           <button
             v-for="option in askFeedTypeOptions"
             :key="option.key"
@@ -48,14 +48,14 @@
       <div class="search-scroll-container custom-scrollbar" @scroll="handleScroll">
         <template v-if="queryStr">
           <section class="search-results-section">
-            <div v-if="activeState.loading && !activeState.items.length" class="loading-wrapper"><LoadingState text="正在搜索..." /></div>
-            <div v-else-if="activeState.error && !activeState.items.length" class="empty-wrapper"><EmptyState title="搜索失败" :description="activeState.error" /><button type="button" class="retry-button" @click="fetchTab(activeTab)">重试</button></div>
-            <div v-else-if="!activeState.items.length" class="empty-wrapper"><EmptyState title="未搜索到相关结果" description="请尝试输入其他关键字重新搜索" /></div>
+            <div v-if="activeState.loading && !activeState.items.length" class="loading-wrapper"><LoadingState text="Searching..." /></div>
+            <div v-else-if="activeState.error && !activeState.items.length" class="empty-wrapper"><EmptyState title="Search failed" :description="activeState.error" /><button type="button" class="retry-button" @click="fetchTab(activeTab)">Retry</button></div>
+            <div v-else-if="!activeState.items.length" class="empty-wrapper"><EmptyState title="No related results found" description="Try entering another keyword to search again" /></div>
             <div v-else class="search-result-list">
               <SearchResultItem v-for="(item, index) in activeState.items" :key="entityKey(item, index)" :entity="item" :highlight-keyword="queryStr" :show-follow="activeTab === 'user' || activeTab === 'users'" :followed="isUserFollowed(item)" @deleted="removeEntity" @search="doSearch" @toggle-follow="toggleFollow" />
               <div class="pagination-footer">
-                <LoadingState v-if="activeState.loadingMore" text="加载更多中..." />
-                <div v-else-if="activeState.cursor.noMore" class="no-more">没有更多结果了</div>
+                <LoadingState v-if="activeState.loadingMore" text="Loading more..." />
+                <div v-else-if="activeState.cursor.noMore" class="no-more">No more results</div>
               </div>
             </div>
           </section>
@@ -65,9 +65,9 @@
           <p class="search-welcome-hint">{{ searchWelcomeHint }}</p>
           <template v-if="!isTopicScopedSearch">
             <SearchHotListCard v-for="(item, index) in hotItems" :key="entityKey(item, index)" :entity="item" @search="doSearch" />
-            <EmptyState v-if="!hotItems.length" title="开始搜索" description="热门搜索由酷安接口动态提供" />
+            <EmptyState v-if="!hotItems.length" title="Start searching" description="Popular searches are dynamically provided by the CoolApk API" />
           </template>
-          <EmptyState v-else title="搜索话题帖子" description="输入关键词，搜索当前话题里的帖子" />
+          <EmptyState v-else title="Search topic posts" description="Enter keywords to search for posts in the current topic" />
         </section>
       </div>
     </div>
