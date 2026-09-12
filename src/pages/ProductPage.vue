@@ -1,11 +1,11 @@
 <template>
   <div class="page-container custom-scrollbar" @scroll="handleScroll">
     <div v-if="headerLoading" class="product-header-card skeleton-header">
-      <LoadingState text="正在加载产品信息..." />
+      <LoadingState text="Loading product information..." />
     </div>
 
     <div v-else-if="headerError" class="product-header-card skeleton-header">
-      <ErrorState title="加载失败" message="无法获取产品信息" @retry="fetchProductHeader" />
+      <ErrorState title="Loading Failed" message="Unable to retrieve product information" @retry="fetchProductHeader" />
     </div>
 
     <div v-else-if="productDetail" class="product-header-card">
@@ -29,11 +29,11 @@
             {{ productDescription }}
           </div>
           <div class="product-stats">
-            <span v-if="productDetail.follow_num">{{ formatCount(productDetail.follow_num) }} 关注</span>
-            <span v-if="productDetail.feed_comment_num">{{ formatCount(productDetail.feed_comment_num) }} 讨论</span>
-            <span v-if="productDetail.rating_average_score">评分 {{ productDetail.rating_average_score }}</span>
-            <span v-if="productDetail.wish_count">想要 {{ formatCount(productDetail.wish_count) }}</span>
-            <span v-if="productDetail.buy_count">已购 {{ formatCount(productDetail.buy_count) }}</span>
+            <span v-if="productDetail.follow_num">{{ formatCount(productDetail.follow_num) }} Following</span>
+            <span v-if="productDetail.feed_comment_num">{{ formatCount(productDetail.feed_comment_num) }} Discussions</span>
+            <span v-if="productDetail.rating_average_score">Rating {{ productDetail.rating_average_score }}</span>
+            <span v-if="productDetail.wish_count">Want {{ formatCount(productDetail.wish_count) }}</span>
+            <span v-if="productDetail.buy_count">Purchased {{ formatCount(productDetail.buy_count) }}</span>
           </div>
         </div>
 
@@ -45,7 +45,7 @@
             @click="toggleWish"
           >
             <i :class="isWished ? 'fas fa-heart' : 'far fa-heart'"></i>
-            <span>想要</span>
+            <span>Want</span>
           </button>
           <button
             type="button"
@@ -54,14 +54,14 @@
             @click="toggleBuy"
           >
             <i :class="isBought ? 'fas fa-check-circle' : 'far fa-check-circle'"></i>
-            <span>已购</span>
+            <span>Purchased</span>
           </button>
         </div>
       </div>
     </div>
 
     <div v-else class="product-header-card skeleton-header">
-      <EmptyState title="未找到该产品信息" description="该产品可能已下架或ID不正确" />
+      <EmptyState title="Product Information Not Found" description="The product may have been delisted or the ID is incorrect" />
     </div>
 
     <div class="product-sub-tabs custom-scrollbar">
@@ -76,7 +76,7 @@
       </button>
     </div>
 
-    <!-- ===== 动态 Tab ===== -->
+    <!-- ===== Feed Tab ===== -->
     <template v-if="isFeedTab">
       <EntityFilterBar
         v-model:sort="currentSort"
@@ -97,258 +97,256 @@
       />
 
       <div v-if="feedsLoading && page === 1" class="loading-wrapper">
-        <LoadingState text="正在获取产品动态..." />
+        <LoadingState text="Loading product feeds..." />
       </div>
 
       <div v-else-if="feedsError && productFeeds.length === 0" class="error-wrapper">
-        <ErrorState title="动态加载失败" message="无法获取该产品的动态，请检查网络后重试" @retry="retryFeeds" />
+        <ErrorState title="Failed to Load Feeds" message="Unable to retrieve product feeds. Check your network connection and try again" @retry="retryFeeds" />
       </div>
 
       <div v-else-if="productFeeds.length === 0 && !feedsLoading" class="empty-wrapper">
-        <EmptyState title="暂无相关动态" />
+        <EmptyState title="No related feeds" />
       </div>
 
       <div v-else class="feed-list">
         <FeedCard v-for="item in productFeeds" :key="item.id || item.ttype + item.uid" :feed="item" :highlight-keyword="searchKeyword" @deleted="handleFeedDeleted" />
 
         <div class="pagination-footer">
-          <LoadingState v-if="feedsLoading && page > 1" text="加载更多中..." />
-          <button v-else-if="feedsError" class="retry-inline" @click="retryFeeds">加载失败，点击重试</button>
-          <div v-else-if="noMore" class="no-more">没有更多动态了</div>
+          <LoadingState v-if="feedsLoading && page > 1" text="Loading more..." />
+          <button v-else-if="feedsError" class="retry-inline" @click="retryFeeds">Failed to load, click to retry</button>
+          <div v-else-if="noMore" class="no-more">No more feeds</div>
         </div>
       </div>
     </template>
 
-    <!-- ===== 参数 Tab ===== -->
-    <template v-else-if="activeTab === 'config'">
-      <div class="config-tab-content">
-        <div v-if="configLoading" class="loading-wrapper">
-          <LoadingState text="正在加载配置信息..." />
-        </div>
+   <!-- ===== Config Tab ===== -->
+<template v-else-if="activeTab === 'config'">
+  <div class="config-tab-content">
+    <div v-if="configLoading" class="loading-wrapper">
+      <LoadingState text="Loading configuration information..." />
+    </div>
 
-        <div v-else-if="configList.length === 0" class="empty-wrapper">
-          <EmptyState title="该产品暂无公开配置" description="可以查看其他数码产品获取参数信息" />
-        </div>
+    <div v-else-if="configList.length === 0" class="empty-wrapper">
+      <EmptyState title="No public configuration available for this product" description="View other digital products to get specification information" />
+    </div>
 
-        <template v-else>
-          <div class="config-toolbar">
-            <span class="config-toolbar-title">
-              <i class="fas fa-table-list"></i> 版本配置（{{ configList.length }}）
-            </span>
-            <button
-              type="button"
-              class="compare-btn"
-              :disabled="compareSelected.length < 2"
-              @click="goCompare"
-            >
-              <i class="fas fa-code-compare"></i> 对比配置（{{ compareSelected.length }}）
-            </button>
-          </div>
-
-          <div class="config-list">
-            <div
-              v-for="config in configList"
-              :key="String(config.id)"
-              :class="['config-card', { active: selectedConfigId === String(config.id) }]"
-              @click="selectConfig(String(config.id))"
-            >
-              <div class="config-check">
-                <i :class="selectedConfigId === String(config.id) ? 'fas fa-circle-dot' : 'far fa-circle'"></i>
-              </div>
-              <div class="config-info">
-                <div class="config-title-row">
-                  <strong class="config-title">{{ config.title }}</strong>
-                  <span v-if="String(config.is_add_compare) === '1'" class="comparing-badge">对比中</span>
-                </div>
-                <div class="config-meta">
-                  <span v-if="config.price">参考价 ¥{{ config.price }}</span>
-                  <span v-if="config.release_time">发布于 {{ config.release_time }}</span>
-                  <span v-if="config.cpu">{{ config.cpu }}</span>
-                  <span v-if="config.ram">{{ config.ram }}</span>
-                </div>
-              </div>
-              <div class="config-actions" @click.stop>
-                <button
-                  type="button"
-                  :class="['compare-toggle', { active: compareSelected.includes(String(config.id)) }]"
-                  :disabled="comparePending"
-                  @click="toggleCompareSelected(String(config.id))"
-                >
-                  <i :class="compareSelected.includes(String(config.id)) ? 'fas fa-check-square' : 'far fa-square'"></i>
-                  {{ compareSelected.includes(String(config.id)) ? '已选对比' : '加入对比' }}
-                </button>
-                <button
-                  type="button"
-                  :class="['server-compare-toggle', { active: String(config.is_add_compare) === '1' }]"
-                  :disabled="serverComparePending"
-                  @click="toggleServerCompare(String(config.id))"
-                >
-                  <i class="fas fa-cloud-upload-alt"></i>
-                  {{ String(config.is_add_compare) === '1' ? '移出对比' : '加入对比' }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="selectedConfig" class="config-detail">
-            <div class="config-detail-head">
-              <span class="config-detail-title"><i class="fas fa-microchip"></i> {{ selectedConfig.title }} 详细参数</span>
-            </div>
-            <ProductConfigTable :config="selectedConfig" />
-          </div>
-        </template>
-      </div>
-    </template>
-
-    <!-- ===== 媒体 Tab ===== -->
-    <template v-else-if="activeTab === 'media'">
-      <div class="media-sub-tabs">
+    <template v-else>
+      <div class="config-toolbar">
+        <span class="config-toolbar-title">
+          <i class="fas fa-table-list"></i> Version Configurations ({{ configList.length }})
+        </span>
         <button
-          v-for="filter in mediaFilters"
-          :key="filter.key"
           type="button"
-          :class="['media-filter-btn', { active: activeMediaFilter === filter.key }]"
-          @click="selectMediaFilter(filter.key)"
+          class="compare-btn"
+          :disabled="compareSelected.length < 2"
+          @click="goCompare"
         >
-          {{ filter.label }}
+          <i class="fas fa-code-compare"></i> Compare Configurations ({{ compareSelected.length }})
         </button>
       </div>
 
-      <div v-if="mediaLoading && mediaList.length === 0" class="loading-wrapper">
-        <LoadingState text="正在加载产品图集..." />
-      </div>
-
-      <div v-else-if="mediaError && mediaList.length === 0" class="error-wrapper">
-        <ErrorState title="图集加载失败" message="无法获取该产品的图片/视频，请检查网络后重试" @retry="fetchMedia" />
-      </div>
-
-      <div v-else-if="mediaList.length === 0" class="empty-wrapper">
-        <EmptyState title="暂无媒体内容" description="该筛选条件下没有可展示的图片或视频" />
-      </div>
-
-      <div v-else class="media-grid">
+      <div class="config-list">
         <div
-          v-for="(item, index) in mediaList"
-          :key="String(item.id ?? item.entityId ?? index)"
-          class="media-item"
-          @click="openMedia(index)"
+          v-for="config in configList"
+          :key="String(config.id)"
+          :class="['config-card', { active: selectedConfigId === String(config.id) }]"
+          @click="selectConfig(String(config.id))"
         >
-          <AppImage :src="mediaThumb(item)" image-class="media-img" :alt="mediaTypeText(item)" loading="lazy" />
-          <span v-if="isVideo(item)" class="media-play-badge"><i class="fas fa-play"></i></span>
-          <span class="media-type-badge">{{ isVideo(item) ? '视频' : '图片' }}</span>
+          <div class="config-check">
+            <i :class="selectedConfigId === String(config.id) ? 'fas fa-circle-dot' : 'far fa-circle'"></i>
+          </div>
+          <div class="config-info">
+            <div class="config-title-row">
+              <strong class="config-title">{{ config.title }}</strong>
+              <span v-if="String(config.is_add_compare) === '1'" class="comparing-badge">Comparing</span>
+            </div>
+            <div class="config-meta">
+              <span v-if="config.price">Reference Price ¥{{ config.price }}</span>
+              <span v-if="config.release_time">Released {{ config.release_time }}</span>
+              <span v-if="config.cpu">{{ config.cpu }}</span>
+              <span v-if="config.ram">{{ config.ram }}</span>
+            </div>
+          </div>
+          <div class="config-actions" @click.stop>
+            <button
+              type="button"
+              :class="['compare-toggle', { active: compareSelected.includes(String(config.id)) }]"
+              :disabled="comparePending"
+              @click="toggleCompareSelected(String(config.id))"
+            >
+              <i :class="compareSelected.includes(String(config.id)) ? 'fas fa-check-square' : 'far fa-square'"></i>
+              {{ compareSelected.includes(String(config.id)) ? 'Selected for Comparison' : 'Add to Comparison' }}
+            </button>
+            <button
+              type="button"
+              :class="['server-compare-toggle', { active: String(config.is_add_compare) === '1' }]"
+              :disabled="serverComparePending"
+              @click="toggleServerCompare(String(config.id))"
+            >
+              <i class="fas fa-cloud-upload-alt"></i>
+              {{ String(config.is_add_compare) === '1' ? 'Remove from Comparison' : 'Add to Comparison' }}
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div v-if="selectedConfig" class="config-detail">
+        <div class="config-detail-head">
+          <span class="config-detail-title"><i class="fas fa-microchip"></i> {{ selectedConfig.title }} Detailed Specifications</span>
+        </div>
+        <ProductConfigTable :config="selectedConfig" />
+      </div>
+    </template>
+  </div>
+</template>
+
+   <!-- ===== Media Tab ===== -->
+<template v-else-if="activeTab === 'media'">
+  <div class="media-sub-tabs">
+    <button
+      v-for="filter in mediaFilters"
+      :key="filter.key"
+      type="button"
+      :class="['media-filter-btn', { active: activeMediaFilter === filter.key }]"
+      @click="selectMediaFilter(filter.key)"
+    >
+      {{ filter.label }}
+    </button>
+  </div>
+
+  <div v-if="mediaLoading && mediaList.length === 0" class="loading-wrapper">
+    <LoadingState text="Loading product gallery..." />
+  </div>
+
+  <div v-else-if="mediaError && mediaList.length === 0" class="error-wrapper">
+    <ErrorState title="Failed to Load Gallery" message="Unable to retrieve images/videos for this product. Check your network connection and try again" @retry="fetchMedia" />
+  </div>
+
+  <div v-else-if="mediaList.length === 0" class="empty-wrapper">
+    <EmptyState title="No Media Content" description="There are no images or videos to display under this filter" />
+  </div>
+
+  <div v-else class="media-grid">
+    <div
+      v-for="(item, index) in mediaList"
+      :key="String(item.id ?? item.entityId ?? index)"
+      class="media-item"
+      @click="openMedia(index)"
+    >
+      <AppImage :src="mediaThumb(item)" image-class="media-img" :alt="mediaTypeText(item)" loading="lazy" />
+      <span v-if="isVideo(item)" class="media-play-badge"><i class="fas fa-play"></i></span>
+      <span class="media-type-badge">{{ isVideo(item) ? 'Video' : 'Image' }}</span>
+    </div>
+
+    <div class="pagination-footer">
+      <LoadingState v-if="mediaLoading" text="Loading more..." />
+      <button v-else-if="mediaError" class="retry-inline" @click="fetchMedia(true)">Failed to load, click to retry</button>
+      <div v-else-if="mediaNoMore" class="no-more">No more content</div>
+    </div>
+  </div>
+</template>
+
+   <!-- ===== Rating Tab ===== -->
+<template v-else-if="activeTab === 'rating'">
+  <div class="rating-tab-content">
+    <!-- My Rating -->
+    <div class="my-rating-card">
+      <div class="my-rating-head">
+        <span class="section-title"><i class="fas fa-star"></i> My Rating</span>
+        <span v-if="!authStore.isLoggedIn" class="login-hint">Log in to rate</span>
+      </div>
+
+      <div v-if="authStore.isLoggedIn" class="rating-composer">
+        <div class="star-input">
+          <button
+            v-for="star in 5"
+            :key="star"
+            type="button"
+            class="star-btn"
+            :class="{ active: star <= myRating }"
+            @click="setMyRating(star)"
+            :title="`${star} Stars`"
+          >
+            <i :class="star <= myRating ? 'fas fa-star' : 'far fa-star'"></i>
+          </button>
+          <span class="rating-hint-text">
+            {{ myRating > 0 ? `Rated ${myRating} Stars` : 'Click a star to rate' }}
+          </span>
+        </div>
+        <div class="rating-options">
+          <label class="buy-option">
+            <input v-model="buyChecked" type="checkbox" />
+            <span>I purchased this product</span>
+          </label>
+          <button
+            v-if="myRating > 0"
+            type="button"
+            class="cancel-rating-btn"
+            :disabled="ratingPending"
+            @click="clearMyRating"
+          >
+            Cancel Rating
+          </button>
+        </div>
+        <div v-if="ratingPending" class="rating-pending"><LoadingState text="Submitting rating..." /></div>
+      </div>
+
+      <div v-else class="rating-login-tip">
+        <span>Log in to your CoolApk account to rate</span>
+        <button type="button" class="login-btn" @click="authStore.openLoginModal()">Log In Now</button>
+      </div>
+    </div>
+
+    <!-- Rating Trend Chart -->
+    <div class="rating-chart-wrapper">
+      <div v-if="chartLoading" class="loading-wrapper">
+        <LoadingState text="Loading rating trends..." />
+      </div>
+      <div v-else-if="chartError" class="error-wrapper">
+        <ErrorState title="Failed to Load Rating Trends" message="Unable to retrieve this product's rating trend data" @retry="fetchRatingChart" />
+      </div>
+      <RatingChart v-else :periods="ratingChartPeriods" />
+    </div>
+
+    <!-- User Ratings List -->
+    <div class="rating-list-section">
+      <div class="rating-list-head">
+        <span class="section-title"><i class="fas fa-users"></i> User Ratings</span>
+        <div class="rating-list-filter">
+          <button
+            v-for="filter in ratingListFilters"
+            :key="filter.key"
+            type="button"
+            :class="['filter-pill', { active: activeRatingFilter === filter.key }]"
+            @click="selectRatingFilter(filter.key)"
+          >
+            {{ filter.label }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="ratingsLoading && ratings.length === 0" class="loading-wrapper">
+        <LoadingState text="Loading rating list..." />
+      </div>
+
+      <div v-else-if="ratingsError && ratings.length === 0" class="error-wrapper">
+        <ErrorState title="Failed to Load Rating List" message="Unable to retrieve user ratings for this product" @retry="fetchRatings" />
+      </div>
+
+      <div v-else-if="ratings.length === 0" class="empty-wrapper">
+        <EmptyState title="No Ratings" description="No users have rated this product yet" />
+      </div>
+
+      <div v-else class="rating-list">
+        <RatingCard v-for="item in ratings" :key="item.id || item.entityId || item.uid" :feed="item" />
 
         <div class="pagination-footer">
-          <LoadingState v-if="mediaLoading" text="加载更多中..." />
-          <button v-else-if="mediaError" class="retry-inline" @click="fetchMedia(true)">加载失败，点击重试</button>
-          <div v-else-if="mediaNoMore" class="no-more">没有更多内容了</div>
+          <LoadingState v-if="ratingsLoading" text="Loading more..." />
+          <button v-else-if="ratingsError" class="retry-inline" @click="fetchRatings(true)">Failed to load, click to retry</button>
+          <div v-else-if="ratingsNoMore" class="no-more">No more ratings</div>
         </div>
       </div>
-    </template>
-
-    <!-- ===== 评分 Tab ===== -->
-    <template v-else-if="activeTab === 'rating'">
-      <div class="rating-tab-content">
-        <!-- 我的评分 -->
-        <div class="my-rating-card">
-          <div class="my-rating-head">
-            <span class="section-title"><i class="fas fa-star"></i> 我的评分</span>
-            <span v-if="!authStore.isLoggedIn" class="login-hint">登录后可以评分</span>
-          </div>
-
-          <div v-if="authStore.isLoggedIn" class="rating-composer">
-            <div class="star-input">
-              <button
-                v-for="star in 5"
-                :key="star"
-                type="button"
-                class="star-btn"
-                :class="{ active: star <= myRating }"
-                @click="setMyRating(star)"
-                :title="`${star} 星`"
-              >
-                <i :class="star <= myRating ? 'fas fa-star' : 'far fa-star'"></i>
-              </button>
-              <span class="rating-hint-text">
-                {{ myRating > 0 ? `已评 ${myRating} 星` : '点击星星进行评分' }}
-              </span>
-            </div>
-            <div class="rating-options">
-              <label class="buy-option">
-                <input v-model="buyChecked" type="checkbox" />
-                <span>我已购买该产品</span>
-              </label>
-              <button
-                v-if="myRating > 0"
-                type="button"
-                class="cancel-rating-btn"
-                :disabled="ratingPending"
-                @click="clearMyRating"
-              >
-                取消评分
-              </button>
-            </div>
-            <div v-if="ratingPending" class="rating-pending"><LoadingState text="正在提交评分..." /></div>
-          </div>
-
-          <div v-else class="rating-login-tip">
-            <span>评分需要登录酷安账号</span>
-            <button type="button" class="login-btn" @click="authStore.openLoginModal()">立即登录</button>
-          </div>
-        </div>
-
-        <!-- 评分趋势图 -->
-        <div class="rating-chart-wrapper">
-          <div v-if="chartLoading" class="loading-wrapper">
-            <LoadingState text="正在加载评分趋势..." />
-          </div>
-          <div v-else-if="chartError" class="error-wrapper">
-            <ErrorState title="评分趋势加载失败" message="无法获取该产品的评分趋势数据" @retry="fetchRatingChart" />
-          </div>
-          <RatingChart v-else :periods="ratingChartPeriods" />
-        </div>
-
-        <!-- 用户评分列表 -->
-        <div class="rating-list-section">
-          <div class="rating-list-head">
-            <span class="section-title"><i class="fas fa-users"></i> 用户评分</span>
-            <div class="rating-list-filter">
-              <button
-                v-for="filter in ratingListFilters"
-                :key="filter.key"
-                type="button"
-                :class="['filter-pill', { active: activeRatingFilter === filter.key }]"
-                @click="selectRatingFilter(filter.key)"
-              >
-                {{ filter.label }}
-              </button>
-            </div>
-          </div>
-
-          <div v-if="ratingsLoading && ratings.length === 0" class="loading-wrapper">
-            <LoadingState text="正在加载评分列表..." />
-          </div>
-
-          <div v-else-if="ratingsError && ratings.length === 0" class="error-wrapper">
-            <ErrorState title="评分列表加载失败" message="无法获取该产品的用户评分" @retry="fetchRatings" />
-          </div>
-
-          <div v-else-if="ratings.length === 0" class="empty-wrapper">
-            <EmptyState title="暂无评分" description="还没有用户对该产品评分" />
-          </div>
-
-          <div v-else class="rating-list">
-            <RatingCard v-for="item in ratings" :key="item.id || item.entityId || item.uid" :feed="item" />
-
-            <div class="pagination-footer">
-              <LoadingState v-if="ratingsLoading" text="加载更多中..." />
-              <button v-else-if="ratingsError" class="retry-inline" @click="fetchRatings(true)">加载失败，点击重试</button>
-              <div v-else-if="ratingsNoMore" class="no-more">没有更多评分了</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
+    </div>
   </div>
 </template>
 
