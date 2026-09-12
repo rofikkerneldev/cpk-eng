@@ -344,10 +344,10 @@
           <LoadingState v-if="ratingsLoading" text="Loading more..." />
           <button v-else-if="ratingsError" class="retry-inline" @click="fetchRatings(true)">Failed to load, click to retry</button>
           <div v-else-if="ratingsNoMore" class="no-more">No more ratings</div>
-        </div>
-      </div>
-    </div>
+         </div>
   </div>
+</div>
+</template>
 </template>
 
 <script setup lang="ts">
