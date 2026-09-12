@@ -2,17 +2,17 @@
   <div class="page-container custom-scrollbar" @scroll="handleScroll">
     <div class="top-nav-bar">
       <div class="nav-title-box">
-        <span class="nav-title">活动详情</span>
+        <span class="nav-title">Event Details</span>
       </div>
     </div>
 
-    <!-- 活动头部 -->
+    <!-- Event Header -->
     <div v-if="headerLoading" class="event-header-card skeleton-header">
-      <LoadingState text="正在加载活动详情..." />
+      <LoadingState text="Loading event details..." />
     </div>
 
     <div v-else-if="headerError" class="event-header-card skeleton-header">
-      <ErrorState title="加载失败" message="无法获取活动详情，该活动可能已关闭" @retry="fetchEventDetail" />
+      <ErrorState title="Loading Failed" message="Unable to retrieve event details. The event may have been closed." @retry="fetchEventDetail" />
     </div>
 
     <template v-else-if="eventDetail">
@@ -56,16 +56,16 @@
         </div>
       </div>
 
-      <!-- 活动说明 -->
+      <!-- Event Description -->
       <div v-if="eventContent" class="event-section-card">
-        <h3 class="section-title">活动说明</h3>
+        <h3 class="section-title">Event Description</h3>
         <p class="event-content">{{ eventContent }}</p>
         <p v-if="noticeRule" class="event-notice">{{ noticeRule }}</p>
       </div>
 
-      <!-- 主办方 / 奖品 / 商品 -->
+      <!-- Organizer / Prizes / Products -->
       <div v-if="sponsorUsers.length" class="event-section-card">
-        <h3 class="section-title">主办方</h3>
+        <h3 class="section-title">Organizer</h3>
         <div class="sponsor-user-list">
           <div v-for="user in sponsorUsers" :key="getKey(user)" class="sponsor-user" @click="openUser(user)">
             <AppImage
@@ -84,7 +84,7 @@
       </div>
 
       <div v-if="sponsorPrizes.length" class="event-section-card">
-        <h3 class="section-title">活动奖品</h3>
+        <h3 class="section-title">Event Prizes</h3>
         <div class="prize-grid">
           <div v-for="prize in sponsorPrizes" :key="getKey(prize)" class="prize-item">
             <AppImage
@@ -102,7 +102,7 @@
         </div>
       </div>
 
-      <!-- 活动动态 Tab -->
+      <!-- Event Feed Tabs -->
       <div v-if="eventTabs.length" class="event-sub-tabs custom-scrollbar">
         <button
           v-for="tab in eventTabs"
@@ -110,35 +110,35 @@
           :class="['event-tab-item', { active: activeTabUrl === tab.url }]"
           @click="selectTab(tab.url)"
         >
-          <span>{{ tab.title || '动态' }}</span>
+          <span>{{ tab.title || 'Feed' }}</span>
           <span v-if="activeTabUrl === tab.url" class="tab-line"></span>
         </button>
       </div>
 
       <div v-if="feedsLoading && page === 1" class="loading-wrapper">
-        <LoadingState text="正在加载活动动态..." />
+        <LoadingState text="Loading event feeds..." />
       </div>
 
       <div v-else-if="feedsError && feeds.length === 0" class="error-wrapper">
-        <ErrorState title="动态加载失败" message="无法获取该活动的动态列表" @retry="retryFeeds" />
+        <ErrorState title="Failed to Load Feeds" message="Unable to retrieve the feed list for this event" @retry="retryFeeds" />
       </div>
 
       <div v-else-if="feeds.length === 0 && !feedsLoading" class="empty-wrapper">
-        <EmptyState title="暂无相关动态" />
+        <EmptyState title="No related feeds" />
       </div>
 
       <div v-else class="feed-list">
         <FeedCard v-for="item in feeds" :key="item.id || item.ttype + item.uid" :feed="item" @deleted="handleFeedDeleted" />
         <div class="pagination-footer">
-          <LoadingState v-if="feedsLoading && page > 1" text="加载更多中..." />
-          <button v-else-if="feedsError" class="retry-inline" @click="retryFeeds">加载失败，点击重试</button>
-          <div v-else-if="noMore" class="no-more">没有更多动态了</div>
+          <LoadingState v-if="feedsLoading && page > 1" text="Loading more..." />
+          <button v-else-if="feedsError" class="retry-inline" @click="retryFeeds">Failed to load, click to retry</button>
+          <div v-else-if="noMore" class="no-more">No more feeds</div>
         </div>
       </div>
     </template>
 
     <div v-else class="empty-wrapper">
-      <EmptyState title="未找到该活动" description="该活动可能已被删除或ID不正确" />
+      <EmptyState title="Event Not Found" description="The event may have been deleted or the ID is incorrect" />
     </div>
   </div>
 </template>
