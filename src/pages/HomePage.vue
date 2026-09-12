@@ -11,9 +11,9 @@
       </div>
 
       <div ref="feedScrollContainer" class="feed-scroll-container custom-scrollbar" @scroll="handleScroll">
-        <!-- 1. 头条 Tab 专属：服务端要闻与动态子栏目 -->
+        <!-- 1. Headline Tab only: server-side top stories and dynamic sub-channels -->
         <div v-if="isHeadlineTab" class="headline-header-section">
-          <!-- APK ConfigPage.rawEntities 动态下发的头条子栏目 -->
+          <!-- Headline sub-channels dynamically supplied by APK ConfigPage.rawEntities -->
           <div
             v-if="headlineSubChannels.length"
             ref="subChannelsContainer"
@@ -25,7 +25,7 @@
               :key="channel.key"
               type="button"
               :class="['icon-btn-item', { selected: isSubChannelSelected(channel) }]"
-              :title="isSubChannelSelected(channel) ? `已选中 ${channel.title}（再次点击可取消）` : channel.title"
+              :title="isSubChannelSelected(channel) ? `Selected ${channel.title} (click again to cancel)` : channel.title"
               @click="openHeadlineSubChannel(channel)"
             >
               <span class="icon-circle">
@@ -41,7 +41,7 @@
               <span class="channel-title">{{ channel.title }}</span>
             </button>
           </div>
-          <div v-if="headlineNestedSubChannels.length" class="headline-nested-tabs" role="tablist" aria-label="头条子栏目">
+          <div v-if="headlineNestedSubChannels.length" class="headline-nested-tabs" role="tablist" aria-label="Headline sub-channels">
             <button
               v-for="channel in headlineNestedSubChannels"
               :key="channel.key"
@@ -54,9 +54,9 @@
           </div>
         </div>
 
-        <!-- 2. 热榜 Tab 专属：周榜/月榜 + 热门搜索词 + 排序名次 -->
+        <!-- 2. Hot Ranking Tab only: weekly/monthly rankings + popular search terms + ranking positions -->
         <div v-if="isHotTab" class="hot-header-section">
-          <!-- 5 大榜单金刚组 -->
+          <!-- Top 5 ranking shortcuts -->
           <div class="hot-ranks-row">
             <button
               v-for="rank in hotRanks"
@@ -70,7 +70,7 @@
             </button>
           </div>
 
-          <!-- 热门搜索词 Chips 胶囊标签 -->
+          <!-- Popular search terms Chips -->
           <div v-if="hotKeywords.length" class="hot-search-chips custom-scrollbar">
             <button
               v-for="(kw, idx) in hotKeywords"
@@ -83,21 +83,21 @@
           </div>
         </div>
 
-        <!-- 3. 快讯 Tab 专属：酷安快讯 Banner -->
+        <!-- 3. News Flash Tab only: CoolApk News Flash Banner -->
         <div v-if="isNewsTab" class="express-banner">
           <div class="express-banner-content">
-            <div class="banner-title"><i class="fas fa-bolt"></i> 酷安快讯</div>
-            <div class="banner-sub">每日科技新鲜事 · 7x24小时不间断更新</div>
+            <div class="banner-title"><i class="fas fa-bolt"></i> CoolApk News Flash</div>
+            <div class="banner-sub">Daily tech news · 24/7 continuous updates</div>
           </div>
         </div>
 
-        <!-- 看看号 Tab 专属：看看号卡片网格 -->
+        <!-- KanKan Accounts Tab only: KanKan account card grid -->
         <div v-if="isDyhTab && loading && feeds.length === 0" class="skeleton-padding">
           <FeedSkeleton :count="4" />
         </div>
 
         <div v-else-if="isDyhTab && feeds.length === 0 && !loading" class="empty-padding">
-          <EmptyState title="暂无看看号" />
+          <EmptyState title="No KanKan accounts" />
         </div>
 
         <div v-if="isDyhTab && !loading" class="dyh-tab-grid">
@@ -112,30 +112,30 @@
             <div class="dyh-tab-info">
               <strong class="dyh-tab-name">{{ item.title || item.dyhName }}</strong>
               <span class="dyh-tab-desc">{{ item.description }}</span>
-              <span class="dyh-tab-follow"><i class="fas fa-user-plus"></i> {{ formatDyhCount(item.follownum) }} 关注</span>
+              <span class="dyh-tab-follow"><i class="fas fa-user-plus"></i> {{ formatDyhCount(item.follownum) }} Following</span>
             </div>
             <i class="fas fa-chevron-right dyh-tab-arrow"></i>
           </div>
           <div v-if="loadingMore" class="loading-more">
-            <LoadingState text="加载更多看看号..." />
+            <LoadingState text="Load more KanKan accounts..." />
           </div>
-          <div v-else-if="noMore && feeds.length > 0" class="dyh-tab-no-more">没有更多看看号了</div>
+          <div v-else-if="noMore && feeds.length > 0" class="dyh-tab-no-more">No more KanKan accounts</div>
         </div>
 
-        <!-- 选机中心子栏目专属：直接内嵌展示选机页面 -->
+        <!-- Device Selection sub-channel only: directly embed the device selection page -->
         <ProductSelectorPage v-if="isProductSelectorActive" />
 
-        <!-- 服务端页面实体栏目：话题/新机/直播返回的是卡片与实体，不能按动态流清洗和渲染 -->
+        <!-- Server-side page entity tabs: topics/new devices/live streams return cards and entities, so they cannot be cleaned and rendered as a dynamic feed -->
         <div v-else-if="isPageEntityTab && loading && pageEntities.length === 0" class="skeleton-padding">
           <DiscoverySkeleton />
         </div>
 
         <div v-else-if="isPageEntityTab && error && pageEntities.length === 0" class="error-padding">
-          <ErrorState title="加载页面内容失败" :message="error" @retry="loadFeeds(true)" />
+          <ErrorState title="Failed to load page content" :message="error" @retry="loadFeeds(true)" />
         </div>
 
         <div v-else-if="isPageEntityTab && pageEntities.length === 0" class="empty-padding">
-          <EmptyState title="暂无内容" />
+          <EmptyState title="No content" />
         </div>
 
         <div v-else-if="isPageEntityTab" class="home-page-entity-list">
@@ -146,18 +146,18 @@
             @open="openPageEntity"
           />
           <div v-if="loadingMore" class="loading-more">
-            <LoadingState text="加载更多..." />
+            <LoadingState text="Load more..." />
           </div>
-          <div v-else-if="noMore" class="page-entity-no-more">没有更多内容了</div>
+          <div v-else-if="noMore" class="page-entity-no-more">No more content</div>
         </div>
 
-        <!-- 动态列表与 Loading/Error/Empty 状态 -->
+        <!-- Dynamic list and Loading/Error/Empty states -->
         <div v-else-if="!isDyhTab && loading && feeds.length === 0" class="skeleton-padding">
           <FeedSkeleton :count="4" />
         </div>
 
         <div v-else-if="!isDyhTab && error && feeds.length === 0" class="error-padding">
-          <ErrorState title="加载动态失败" :message="error" @retry="loadFeeds(true)" />
+          <ErrorState title="Failed to load feed" :message="error" @retry="loadFeeds(true)" />
         </div>
 
         <div
@@ -189,11 +189,11 @@
               </div>
               <div class="headline-ranking-tags">
                 <span v-if="item.level" class="headline-ranking-level">Lv.{{ item.level }}</span>
-                <span v-if="index < 3" class="headline-ranking-top-label">{{ index === 0 ? '榜首' : 'TOP ' + (index + 1) }}</span>
+                <span v-if="index < 3" class="headline-ranking-top-label">{{ index === 0 ? 'Rank #1' : 'TOP ' + (index + 1) }}</span>
               </div>
               <div class="headline-ranking-stats">
-                <span><i class="fas fa-users"></i> 粉丝 {{ formatDyhCount(item.fans || item.fansNum) }}</span>
-                <span><i class="fas fa-user-plus"></i> 关注 {{ formatDyhCount(item.follow || item.followNum) }}</span>
+                <span><i class="fas fa-users"></i> Followers {{ formatDyhCount(item.fans || item.fansNum) }}</span>
+                <span><i class="fas fa-user-plus"></i> Following {{ formatDyhCount(item.follow || item.followNum) }}</span>
               </div>
             </div>
             <i class="fas fa-chevron-right headline-ranking-arrow"></i>
@@ -209,7 +209,7 @@
         </div>
 
         <div v-else-if="!isDyhTab && feeds.length === 0" class="empty-padding">
-          <EmptyState title="暂无动态内容" />
+          <EmptyState title="No feed content" />
         </div>
 
         <div v-else-if="!isDyhTab" :class="['feed-list-padding', { 'is-double-column': isDoubleColumn }]">
@@ -263,7 +263,7 @@
           </template>
 
           <div v-if="loadingMore" class="loading-more">
-            <LoadingState text="加载更多动态..." />
+            <LoadingState text="Load more feeds..." />
           </div>
         </div>
       </div>
@@ -545,13 +545,13 @@ async function loadHotSearchKeywords() {
 type HotRankType = 'week' | 'month' | 'favorite' | 'index' | 'picture';
 const activeHotRank = ref<HotRankType>('week');
 const hotRanks: { key: HotRankType; label: string; icon: string; color: string }[] = [
-  { key: 'week', label: '周榜', icon: 'fas fa-thumbs-up', color: 'bg-orange' },
-  { key: 'month', label: '月榜', icon: 'fas fa-calendar-alt', color: 'bg-cyan' },
-  { key: 'favorite', label: '收藏榜', icon: 'fas fa-star', color: 'bg-yellow' },
-  { key: 'index', label: '酷安指数', icon: 'fas fa-chart-line', color: 'bg-purple' },
-  { key: 'picture', label: '酷图榜', icon: 'fas fa-chart-bar', color: 'bg-red' },
+  { key: 'week', label: 'Weekly Ranking', icon: 'fas fa-thumbs-up', color: 'bg-orange' },
+  { key: 'month', label: 'Monthly Ranking', icon: 'fas fa-calendar-alt', color: 'bg-cyan' },
+  { key: 'favorite', label: 'Favorites Ranking', icon: 'fas fa-star', color: 'bg-yellow' },
+  { key: 'index', label: 'CoolApk Index', icon: 'fas fa-chart-line', color: 'bg-purple' },
+  { key: 'picture', label: 'Cool Pictures Ranking', icon: 'fas fa-chart-bar', color: 'bg-red' },
 ];
-
+  
 function getTabKey(tab: ConfigPageTab): string {
   return tab.page_name || tab.url || String(tab.id || tab.title);
 }
@@ -693,35 +693,35 @@ async function getHeadlineSubChannelData(
   const targetUrl = normalizeHeadlinePageUrl(headlineResolvedUrl.value || url);
   const isProductSelector = targetUrl.includes('filter') || targetUrl.includes('product') || title.includes('选机');
 
-  // 1. 如果是选机中心入口，优先请求酷安官方数码分类/选机数据
-  if (isProductSelector) {
-    try {
-      const productPageRes: any = await CoolapkTauriAPI.getDiscoveryPageData({
-        url: targetUrl.startsWith('#') ? targetUrl : '#/product/categoryList',
-        title: title || '选机中心',
-        subTitle: subTitle || '数码库',
-        page,
-        firstItem: headlineCursor.firstItem,
-        lastItem: headlineCursor.lastItem,
-        pageContext: headlinePageContext.value,
-      });
-      if (productPageRes && productPageRes.data && Array.isArray(productPageRes.data) && productPageRes.data.length > 0) {
-        if (page === 1) updateHeadlineNestedSubChannels(productPageRes.data);
-        return productPageRes;
-      }
-    } catch (e) {
-      console.warn('选机中心 discovery 请求重定向:', e);
+ // 1. If this is the Device Selection Center entry, prioritize requesting CoolApk official digital category/device selection data
+if (isProductSelector) {
+  try {
+    const productPageRes: any = await CoolapkTauriAPI.getDiscoveryPageData({
+      url: targetUrl.startsWith('#') ? targetUrl : '#/product/categoryList',
+      title: title || 'Device Selection Center',
+      subTitle: subTitle || 'Digital Library',
+      page,
+      firstItem: headlineCursor.firstItem,
+      lastItem: headlineCursor.lastItem,
+      pageContext: headlinePageContext.value,
+    });
+    if (productPageRes && productPageRes.data && Array.isArray(productPageRes.data) && productPageRes.data.length > 0) {
+      if (page === 1) updateHeadlineNestedSubChannels(productPageRes.data);
+      return productPageRes;
     }
-
-    try {
-      const catRes: any = await CoolapkTauriAPI.getProductCategoryList();
-      if (catRes && catRes.data && Array.isArray(catRes.data) && catRes.data.length > 0) {
-        return catRes;
-      }
-    } catch (e) {
-      console.warn('getProductCategoryList 失败:', e);
-    }
+  } catch (e) {
+    console.warn('Device Selection Center discovery request redirected:', e);
   }
+
+  try {
+    const catRes: any = await CoolapkTauriAPI.getProductCategoryList();
+    if (catRes && catRes.data && Array.isArray(catRes.data) && catRes.data.length > 0) {
+      return catRes;
+    }
+  } catch (e) {
+    console.warn('getProductCategoryList failed:', e);
+  }
+}
 
   // 2. 通用发现页请求
   try {
